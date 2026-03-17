@@ -13,6 +13,9 @@ CREATE INDEX waitlist_email_idx ON waitlist(email);
 -- Create index on created_at for sorting
 CREATE INDEX waitlist_created_at_idx ON waitlist(created_at DESC);
 
+-- Optional: Enable Realtime for live updates (if you want to use Supabase Realtime instead of polling)
+-- ALTER PUBLICATION supabase_realtime ADD TABLE waitlist;
+
 -- Enable Row Level Security (optional, if you want to add RLS policies later)
 -- ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
 

@@ -28,59 +28,31 @@ export default function Home() {
   // Enable scroll reveal animations
   useScrollRevealAll(0.15)
 
-  // Fetch initial count and set up real-time subscription
+  // Fetch count and set up polling for real-time updates
   useEffect(() => {
-    let channel: any | null = null
+    let intervalId: NodeJS.Timeout | null = null
 
-    const setupRealtimeSubscription = async () => {
+    const fetchCount = async () => {
       try {
-        // Fetch initial count
-        const countRes = await fetch('/api/waitlist-count')
-        const countData = await countRes.json()
-        setWaitlistCount(countData.count || 0)
+        const res = await fetch('/api/waitlist-count')
+        const data = await res.json()
+        setWaitlistCount(data.count || 0)
         setIsLoading(false)
-
-        // Set up real-time subscription to Supabase
-        const { createClient } = await import('@supabase/supabase-js')
-
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-        if (supabaseUrl && supabaseAnonKey) {
-          const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-          channel = supabase
-            .channel('waitlist_changes')
-            .on(
-              'postgres_changes',
-              {
-                event: '*',
-                schema: 'public',
-                table: 'waitlist',
-              },
-              (payload) => {
-                console.log('Waitlist change detected:', payload)
-                // Refetch count when changes occur
-                fetch('/api/waitlist-count')
-                  .then((res) => res.json())
-                  .then((data) => {
-                    setWaitlistCount(data.count || 0)
-                  })
-              }
-            )
-            .subscribe()
-        }
       } catch (error) {
-        console.error('Error setting up real-time subscription:', error)
+        console.error('Error fetching waitlist count:', error)
         setIsLoading(false)
       }
     }
 
-    setupRealtimeSubscription()
+    // Initial fetch
+    fetchCount()
+
+    // Poll every 3 seconds for updates
+    intervalId = setInterval(fetchCount, 3000)
 
     return () => {
-      if (channel) {
-        channel.unsubscribe()
+      if (intervalId) {
+        clearInterval(intervalId)
       }
     }
   }, [])
