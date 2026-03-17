@@ -1,0 +1,9 @@
+# Placeholder for OG Image
+
+Add your OG image at: public/og.png
+
+Recommended specs:
+- Dimensions: 1200x630 pixels
+- Format: PNG or JPG
+- Content: rabbithole logo with slogan "Go deep. Stay deep."
+- Background: Dark (#080612) with white text

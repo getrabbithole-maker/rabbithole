@@ -1,0 +1,17 @@
+{
+  "name": "rabbithole — Go deep. Stay deep.",
+  "short_name": "rabbithole",
+  "description": "Your best work lives at the bottom. A deep work ritual app for people who take focus seriously.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080612",
+  "theme_color": "#080612",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
