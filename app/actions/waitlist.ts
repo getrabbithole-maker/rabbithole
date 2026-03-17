@@ -2,6 +2,7 @@
 
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { resend } from '@/lib/resend'
+import { sendTelegramNotification, formatWaitlistNotification } from '@/lib/telegram'
 import { revalidatePath } from 'next/cache'
 import type { WaitlistFormData, Plan, Locale } from '@/types/waitlist'
 
@@ -151,6 +152,14 @@ export async function joinWaitlist(formData: WaitlistFormData): Promise<Waitlist
     const { count } = await supabaseAdmin
       .from('waitlist')
       .select('*', { count: 'exact', head: true })
+
+    const totalSpotsTaken = count || 0
+    const totalSpotsLeft = 100 - totalSpotsTaken
+
+    // Send Telegram notification
+    await sendTelegramNotification(
+      formatWaitlistNotification(email, plan, totalSpotsTaken, totalSpotsLeft)
+    )
 
     // Send confirmation email
     await sendConfirmationEmail(email, plan, locale)
