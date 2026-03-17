@@ -20,40 +20,26 @@ export async function GET() {
 
     const supabaseAdmin = getSupabaseAdmin()
 
-    // Use count query first (it should work, but if not we'll use actual records)
-    const { count, error } = await supabaseAdmin
+    // Fetch ALL records (not just count) to get accurate number
+    // SQL: SELECT id FROM waitlist
+    const { data: allRecords, error } = await supabaseAdmin
       .from('waitlist')
-      .select('*', { count: 'exact', head: true })
+      .select('id')
 
     if (error) {
-      console.error('Count query failed, fetching all records:', error)
-      // Fallback: Get all records and count them
-      const { data: allRecords, error: fetchError } = await supabaseAdmin
-        .from('waitlist')
-        .select('id', { count: 'exact' })
-
-      if (fetchError) {
-        return NextResponse.json({
-          count: 0,
-          error: 'Database query failed',
-          details: fetchError.message
-        }, { status: 200 })
-      }
-
-      const actualCount = allRecords?.length || 0
-      console.log('Using fallback count:', actualCount)
-      return NextResponse.json({ count: actualCount })
+      console.error('Error fetching waitlist records:', error)
+      return NextResponse.json({
+        count: 0,
+        error: 'Database query failed',
+        details: error.message
+      }, { status: 200 })
     }
 
-    // Verify the count by also checking record length (Supabase count can be wrong)
-    const { data: allRecords } = await supabaseAdmin
-      .from('waitlist')
-      .select('id', { count: 'exact', head: true })
+    const actualCount = allRecords?.length || 0
+    console.log('SQL: SELECT id FROM waitlist')
+    console.log('Records found:', actualCount)
+    console.log('All records:', allRecords)
 
-    const actualCount = allRecords?.length || count || 0
-    console.log('Count query:', count, 'Actual records:', actualCount)
-
-    // Use the actual count since Supabase count queries can be inaccurate
     return NextResponse.json({ count: actualCount })
   } catch (error) {
     console.error('Error in waitlist-count route:', error)
