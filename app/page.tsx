@@ -15,7 +15,6 @@ import FeaturesGrid from '@/components/FeaturesGrid'
 import { useScrollRevealAll } from '@/hooks/useScrollReveal'
 
 const TOTAL_SPOTS = 100
-const BASE_OFFSET = 23
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>('en')
@@ -29,14 +28,61 @@ export default function Home() {
   // Enable scroll reveal animations
   useScrollRevealAll(0.15)
 
+  // Fetch initial count and set up real-time subscription
   useEffect(() => {
-    fetch('/api/waitlist-count')
-      .then((res) => res.json())
-      .then((data) => {
-        setWaitlistCount(data.count || 0)
+    let channel: any | null = null
+
+    const setupRealtimeSubscription = async () => {
+      try {
+        // Fetch initial count
+        const countRes = await fetch('/api/waitlist-count')
+        const countData = await countRes.json()
+        setWaitlistCount(countData.count || 0)
         setIsLoading(false)
-      })
-      .catch(() => setIsLoading(false))
+
+        // Set up real-time subscription to Supabase
+        const { createClient } = await import('@supabase/supabase-js')
+
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+        if (supabaseUrl && supabaseAnonKey) {
+          const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+          channel = supabase
+            .channel('waitlist_changes')
+            .on(
+              'postgres_changes',
+              {
+                event: '*',
+                schema: 'public',
+                table: 'waitlist',
+              },
+              (payload) => {
+                console.log('Waitlist change detected:', payload)
+                // Refetch count when changes occur
+                fetch('/api/waitlist-count')
+                  .then((res) => res.json())
+                  .then((data) => {
+                    setWaitlistCount(data.count || 0)
+                  })
+              }
+            )
+            .subscribe()
+        }
+      } catch (error) {
+        console.error('Error setting up real-time subscription:', error)
+        setIsLoading(false)
+      }
+    }
+
+    setupRealtimeSubscription()
+
+    return () => {
+      if (channel) {
+        channel.unsubscribe()
+      }
+    }
   }, [])
 
   // Scroll progress indicator
@@ -54,8 +100,8 @@ export default function Home() {
     return () => window.removeEventListener('scroll', updateScrollProgress)
   }, [])
 
-  const displayTaken = Math.min(waitlistCount + BASE_OFFSET, TOTAL_SPOTS)
-  const displayWaiting = waitlistCount + BASE_OFFSET
+  const displayTaken = Math.min(waitlistCount, TOTAL_SPOTS)
+  const displayWaiting = waitlistCount
   const spotsLeft = TOTAL_SPOTS - displayTaken
 
   return (
