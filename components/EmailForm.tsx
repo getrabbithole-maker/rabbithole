@@ -30,14 +30,20 @@ export default function EmailForm({ locale, billingPeriod, spotsLeft }: EmailFor
       if (result.success) {
         setSuccess(true)
       } else if (result.alreadyExists) {
-        setError(result.error || t.alreadyOnList)
+        setError(t.alreadyOnList)
       } else {
-        setError(result.error || 'Something went wrong')
+        setError(result.error || (locale === 'th' ? 'เกิดข้อผิดพลาดบางอย่าง' : 'Something went wrong'))
       }
     })
   }
 
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value)
+    if (error) setError(null)
+  }
+
   if (success) {
+// ... existing success UI ...
     return (
       <div className="text-center py-4 space-y-3">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-rh-rest/10 rounded border border-rh-rest/20 text-rh-rest text-xs font-mono">
@@ -56,6 +62,7 @@ export default function EmailForm({ locale, billingPeriod, spotsLeft }: EmailFor
   }
 
   if (spotsLeft <= 0) {
+// ... existing fully booked UI ...
     return (
       <div className="space-y-3">
         <div className="text-center py-6">
@@ -77,9 +84,13 @@ export default function EmailForm({ locale, billingPeriod, spotsLeft }: EmailFor
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={handleEmailChange}
           placeholder={t.emailPlaceholder}
-          className="w-full bg-white/[0.04] border border-white/8 px-4 py-3 rounded-lg text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-rh-acc/40 focus:ring-1 focus:ring-rh-acc/10 transition-all duration-300 hover:border-white/12 hover:bg-white/[0.06]"
+          className={`w-full bg-white/[0.04] border px-4 py-3 rounded-lg text-white text-sm placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-rh-acc/10 transition-all duration-300 hover:bg-white/[0.06] ${
+            error 
+              ? 'border-red-500/50 focus:border-red-500/70' 
+              : 'border-white/8 focus:border-rh-acc/40'
+          }`}
           disabled={isPending}
         />
         <button
@@ -92,7 +103,12 @@ export default function EmailForm({ locale, billingPeriod, spotsLeft }: EmailFor
       </form>
 
       {error && (
-        <p className="text-red-400 text-xs font-mono bg-red-400/8 px-3 py-2 rounded border border-red-400/15">{error}</p>
+        <div className="animate-shake">
+          <p className="text-red-400 text-xs font-mono bg-red-400/8 px-3 py-2 rounded border border-red-400/15 flex items-center gap-2">
+            <span className="w-1 h-1 rounded-full bg-red-400 animate-pulse" />
+            {error}
+          </p>
+        </div>
       )}
 
       <p className="font-mono text-[10px] text-white/25 text-center pt-1">
@@ -101,3 +117,4 @@ export default function EmailForm({ locale, billingPeriod, spotsLeft }: EmailFor
     </div>
   )
 }
+
