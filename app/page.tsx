@@ -26,7 +26,8 @@ export default function Home() {
   const t = translations[locale]
 
   // Enable scroll reveal animations
-  useScrollRevealAll(0.15)
+  // Enable scroll reveal animations with lower threshold for mobile
+  useScrollRevealAll(0.1)
 
   // Fetch count and set up polling for real-time updates
   useEffect(() => {
@@ -96,40 +97,39 @@ export default function Home() {
       <main className="relative z-10 min-h-screen">
 
         {/* ── Navigation ── */}
-        <nav className="max-w-[1100px] mx-auto px-6 pt-8 pb-6 flex items-center justify-between">
+        <nav className="max-w-[1100px] mx-auto px-6 pt-6 sm:pt-8 pb-4 sm:pb-6 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <Image
               src="/logo.png"
               alt="rabbithole"
               width={120}
               height={120}
-              className="object-contain"
+              className="w-12 h-12 xs:w-16 xs:h-16 sm:w-[120px] sm:h-[120px] object-contain transition-all"
             />
-            <span className="font-display text-4xl font-bold tracking-tight text-white">rabbithole</span>
+            <span className="font-display text-xl xs:text-2xl sm:text-4xl font-bold tracking-tight text-white hidden xs:inline-block">rabbithole</span>
           </div>
 
           {/* Right side */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             {/* Language toggle */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 sm:gap-1 bg-white/[0.03] p-0.5 rounded-lg border border-white/5">
               <button
                 onClick={() => setLocale('en')}
-                className={`px-3 py-1.5 text-xs font-mono font-medium rounded transition-all duration-300 ${
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-mono font-medium rounded transition-all duration-300 ${
                   locale === 'en'
-                    ? 'text-white bg-white/8 border border-white/12 scale-105'
-                    : 'text-white/30 hover:text-white/60 border border-transparent hover:scale-105'
+                    ? 'text-white bg-white/10 shadow-sm border border-white/10'
+                    : 'text-white/30 hover:text-white/60'
                 }`}
               >
                 EN
               </button>
-              <span className="text-white/10 text-xs">|</span>
               <button
                 onClick={() => setLocale('th')}
-                className={`px-3 py-1.5 text-xs font-mono font-medium rounded transition-all duration-300 font-thai ${
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-mono font-medium rounded transition-all duration-300 font-thai ${
                   locale === 'th'
-                    ? 'text-white bg-white/8 border border-white/12 scale-105'
-                    : 'text-white/30 hover:text-white/60 border border-transparent hover:scale-105'
+                    ? 'text-white bg-white/10 shadow-sm border border-white/10'
+                    : 'text-white/30 hover:text-white/60'
                 }`}
               >
                 TH
@@ -138,9 +138,9 @@ export default function Home() {
 
             {/* Live spots badge */}
             {!isLoading && spotsLeft > 0 && (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/[0.04] border border-white/8 rounded-full">
+              <div className="hidden xs:flex items-center gap-2 px-3 py-1.5 bg-white/[0.04] border border-white/8 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-rh-rest animate-pulse-slow" />
-                <span className="font-mono text-xs text-white/40">{spotsLeft} {t.spotsLeft}</span>
+                <span className="font-mono text-[10px] sm:text-xs text-white/40 whitespace-nowrap">{spotsLeft} {t.spotsLeft}</span>
               </div>
             )}
           </div>

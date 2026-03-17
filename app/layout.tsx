@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Syne, Inter, JetBrains_Mono, Sarabun } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/react'
 import './globals.css'
 
 const syne = Syne({
@@ -63,7 +64,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${syne.variable} ${inter.variable} ${jetbrainsMono.variable} ${sarabun.variable}`}>
-      <body className="font-body antialiased">{children}</body>
+      <body className="font-body antialiased">
+        {children}
+        <Analytics />
+      </body>
     </html>
   )
 }
