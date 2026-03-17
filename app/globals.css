@@ -66,6 +66,13 @@ body::before {
   animation: grain 8s steps(10) infinite;
 }
 
+/* Disable grain animation on mobile for better performance */
+@media (max-width: 768px) {
+  body::before {
+    animation: none;
+  }
+}
+
 /* ─── Keyframes ─── */
 @keyframes grain {
   0%, 100% { transform: translate(0, 0); }
@@ -324,5 +331,42 @@ body::before {
 .scroll-delay-200 { transition-delay: 0.2s; }
 .scroll-delay-300 { transition-delay: 0.3s; }
 .scroll-delay-400 { transition-delay: 0.4s; }
+
+/* ─── Mobile Performance Optimizations ─── */
+@media (max-width: 768px) {
+  /* Reduce animation complexity */
+  .animate-twinkle {
+    animation-duration: 5s !important;
+  }
+
+  /* Disable hover effects on touch devices */
+  .rh-card-hover:hover,
+  .rh-tag:hover,
+  .rh-glow-hover:hover {
+    transform: none !important;
+  }
+
+  /* Optimize rendering for off-screen content */
+  section {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+  }
+
+  /* Reduce shadow complexity */
+  .rh-glow-hover {
+    box-shadow: none !important;
+  }
+
+  /* Optimize backdrop blur - very expensive on mobile */
+  .backdrop-blur-md {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+  }
+
+  /* Disable smooth scroll on mobile for snappier feel */
+  html {
+    scroll-behavior: auto !important;
+  }
+}
 
 

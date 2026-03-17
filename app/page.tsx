@@ -26,8 +26,8 @@ export default function Home() {
   const t = translations[locale]
 
   // Enable scroll reveal animations
-  // Enable scroll reveal animations with lower threshold for mobile
-  useScrollRevealAll(0.1)
+  // Enable scroll reveal animations - higher threshold on mobile for performance
+  useScrollRevealAll(typeof window !== 'undefined' && window.innerWidth < 768 ? 0.2 : 0.1)
 
   // Fetch count and set up polling for real-time updates
   useEffect(() => {
@@ -58,19 +58,38 @@ export default function Home() {
     }
   }, [])
 
-  // Scroll progress indicator
+  // Scroll progress indicator - optimized for mobile
   useEffect(() => {
+    let ticking = false
+    let lastScrollY = 0
+    const isMobile = window.innerWidth < 768
+
     const updateScrollProgress = () => {
       const scrollTop = window.scrollY
+      // Skip update if scroll position hasn't changed much (mobile optimization)
+      if (isMobile && Math.abs(scrollTop - lastScrollY) < 10) {
+        ticking = false
+        return
+      }
+      lastScrollY = scrollTop
+
       const docHeight = document.documentElement.scrollHeight - window.innerHeight
       const progress = (scrollTop / docHeight) * 100
       setScrollProgress(progress)
+      ticking = false
     }
 
-    window.addEventListener('scroll', updateScrollProgress, { passive: true })
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(updateScrollProgress)
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true })
     updateScrollProgress()
 
-    return () => window.removeEventListener('scroll', updateScrollProgress)
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   const displayTaken = Math.min(waitlistCount, TOTAL_SPOTS)
@@ -107,7 +126,7 @@ export default function Home() {
               height={120}
               className="w-12 h-12 xs:w-16 xs:h-16 sm:w-[120px] sm:h-[120px] object-contain transition-all"
             />
-            <span className="font-display text-xl xs:text-2xl sm:text-4xl font-bold tracking-tight text-white hidden xs:inline-block">rabbithole</span>
+            <span className="font-display text-lg xs:text-xl sm:text-2xl lg:text-4xl font-bold tracking-tight text-white inline-block">rabbithole</span>
           </div>
 
           {/* Right side */}

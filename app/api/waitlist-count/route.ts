@@ -20,14 +20,13 @@ export async function GET() {
 
     const supabaseAdmin = getSupabaseAdmin()
 
-    // Fetch ALL records (not just count) to get accurate number
-    // SQL: SELECT id FROM waitlist
-    const { data: allRecords, error } = await supabaseAdmin
+    // Use count parameter - equivalent to SELECT COUNT(*) FROM waitlist
+    const { count, error } = await supabaseAdmin
       .from('waitlist')
-      .select('id')
+      .select('*', { count: 'exact' })
 
     if (error) {
-      console.error('Error fetching waitlist records:', error)
+      console.error('Error fetching waitlist count:', error)
       return NextResponse.json({
         count: 0,
         error: 'Database query failed',
@@ -35,10 +34,8 @@ export async function GET() {
       }, { status: 200 })
     }
 
-    const actualCount = allRecords?.length || 0
-    console.log('SQL: SELECT id FROM waitlist')
-    console.log('Records found:', actualCount)
-    console.log('All records:', allRecords)
+    const actualCount = count || 0
+    console.log('Waitlist count:', actualCount)
 
     return NextResponse.json({ count: actualCount })
   } catch (error) {
