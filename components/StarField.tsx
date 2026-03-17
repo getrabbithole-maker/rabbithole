@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from 'react'
 export default function StarField() {
   const [stars, setStars] = useState<Array<{ id: number; style: React.CSSProperties; speed: number }>>([])
   const [scrollY, setScrollY] = useState(0)
-  const rafRef = useRef<number>()
+  const rafRef = useRef(0)
 
   useEffect(() => {
     const generatedStars = Array.from({ length: 60 }, (_, i) => {
