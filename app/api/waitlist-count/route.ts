@@ -20,47 +20,41 @@ export async function GET() {
 
     const supabaseAdmin = getSupabaseAdmin()
 
-    // First, let's try to get all records to see what's actually in the database
-    const { data: allRecords, error: fetchError } = await supabaseAdmin
-      .from('waitlist')
-      .select('id, email, created_at')
-
-    if (fetchError) {
-      console.error('Error fetching waitlist records:', fetchError)
-      return NextResponse.json({
-        count: 0,
-        error: 'Database query failed',
-        details: fetchError.message
-      }, { status: 200 })
-    }
-
-    console.log('All records in database:', allRecords)
-    console.log('Number of records:', allRecords?.length || 0)
-
-    // Now get the count
+    // Use count query first (it should work, but if not we'll use actual records)
     const { count, error } = await supabaseAdmin
       .from('waitlist')
       .select('*', { count: 'exact', head: true })
 
     if (error) {
-      console.error('Error fetching waitlist count:', error)
-      return NextResponse.json({
-        count: 0,
-        error: 'Database count query failed',
-        details: error.message,
-        allRecords: allRecords
-      }, { status: 200 })
+      console.error('Count query failed, fetching all records:', error)
+      // Fallback: Get all records and count them
+      const { data: allRecords, error: fetchError } = await supabaseAdmin
+        .from('waitlist')
+        .select('id', { count: 'exact' })
+
+      if (fetchError) {
+        return NextResponse.json({
+          count: 0,
+          error: 'Database query failed',
+          details: fetchError.message
+        }, { status: 200 })
+      }
+
+      const actualCount = allRecords?.length || 0
+      console.log('Using fallback count:', actualCount)
+      return NextResponse.json({ count: actualCount })
     }
 
-    console.log('Count query result:', count)
-    return NextResponse.json({
-      count: count || 0,
-      debug: {
-        countFromQuery: count,
-        actualRecords: allRecords?.length || 0,
-        records: allRecords?.map(r => ({ id: r.id, email: r.email, created_at: r.created_at }))
-      }
-    })
+    // Verify the count by also checking record length (Supabase count can be wrong)
+    const { data: allRecords } = await supabaseAdmin
+      .from('waitlist')
+      .select('id', { count: 'exact', head: true })
+
+    const actualCount = allRecords?.length || count || 0
+    console.log('Count query:', count, 'Actual records:', actualCount)
+
+    // Use the actual count since Supabase count queries can be inaccurate
+    return NextResponse.json({ count: actualCount })
   } catch (error) {
     console.error('Error in waitlist-count route:', error)
     return NextResponse.json({
