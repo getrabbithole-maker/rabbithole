@@ -194,7 +194,7 @@ async function sendAdminNotification(
 
 export async function joinWaitlist(formData: WaitlistFormData): Promise<WaitlistResult> {
   try {
-    const { email, plan, locale } = formData
+    const { email, plan, locale, agreeToEmail } = formData
     const supabaseAdmin = getSupabaseAdmin()
 
     // Check if email already exists
@@ -211,13 +211,15 @@ export async function joinWaitlist(formData: WaitlistFormData): Promise<Waitlist
       }
     }
 
-    // Insert new entry
+    // Insert new entry with email consent
     const { data, error } = await supabaseAdmin
       .from('waitlist')
       .insert({
         email,
         plan,
         locale,
+        email_consent: agreeToEmail, // Store consent for Resend compliance
+        consent_timestamp: new Date().toISOString(), // When they agreed
       })
       .select()
       .single()

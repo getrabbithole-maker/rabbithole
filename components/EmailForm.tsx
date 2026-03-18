@@ -14,6 +14,7 @@ interface EmailFormProps {
 export default function EmailForm({ locale, billingPeriod, spotsLeft }: EmailFormProps) {
   const t = translations[locale]
   const [email, setEmail] = useState('')
+  const [agreeToEmail, setAgreeToEmail] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -25,8 +26,12 @@ export default function EmailForm({ locale, billingPeriod, spotsLeft }: EmailFor
       setError(locale === 'th' ? 'กรุณากรอกอีเมลที่ถูกต้อง' : 'Please enter a valid email')
       return
     }
+    if (!agreeToEmail) {
+      setError(locale === 'th' ? 'กรุณายอมรับเงื่อนไขการรับอีเมล' : 'Please agree to receive emails')
+      return
+    }
     startTransition(async () => {
-      const result = await joinWaitlist({ email, plan: billingPeriod, locale })
+      const result = await joinWaitlist({ email, plan: billingPeriod, locale, agreeToEmail })
       if (result.success) {
         setSuccess(true)
       } else if (result.alreadyExists) {
@@ -80,22 +85,54 @@ export default function EmailForm({ locale, billingPeriod, spotsLeft }: EmailFor
 
   return (
     <div className="space-y-3">
-      <form onSubmit={handleSubmit} className="space-y-2">
+      <form onSubmit={handleSubmit} className="space-y-3">
         <input
           type="email"
           value={email}
           onChange={handleEmailChange}
           placeholder={t.emailPlaceholder}
           className={`w-full bg-white/[0.04] border px-4 py-3 rounded-lg text-white text-sm placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-rh-acc/10 transition-all duration-300 hover:bg-white/[0.06] ${
-            error 
-              ? 'border-red-500/50 focus:border-red-500/70' 
+            error
+              ? 'border-red-500/50 focus:border-red-500/70'
               : 'border-white/8 focus:border-rh-acc/40'
           }`}
           disabled={isPending}
         />
+
+        {/* Email consent checkbox */}
+        <label className="flex items-start gap-2.5 cursor-pointer group">
+          <div className="relative mt-0.5">
+            <input
+              type="checkbox"
+              checked={agreeToEmail}
+              onChange={(e) => setAgreeToEmail(e.target.checked)}
+              className="sr-only peer"
+              disabled={isPending}
+            />
+            <div className={`w-4 h-4 rounded border transition-all duration-200 flex items-center justify-center ${
+              agreeToEmail
+                ? 'bg-rh-acc border-rh-acc'
+                : 'border-white/20 group-hover:border-white/30'
+            } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              {agreeToEmail && (
+                <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+          </div>
+          <span className={`text-xs leading-relaxed ${
+            agreeToEmail ? 'text-white/70' : 'text-white/40'
+          } transition-colors duration-200`}>
+            {locale === 'th'
+              ? 'ฉันยอมรับที่จะรับอีเมลเกี่ยวกับการเปิดตัวและอัปเดตจาก rabbithole'
+              : 'I agree to receive emails about the launch and updates from rabbithole'}
+          </span>
+        </label>
+
         <button
           type="submit"
-          disabled={isPending || !email}
+          disabled={isPending || !email || !agreeToEmail}
           className="w-full py-3 bg-gradient-to-r from-rh-acc to-rh-acc-soft hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg text-white text-sm font-semibold tracking-wide transition-all rh-btn-shimmer hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-rh-acc/20 hover:shadow-xl hover:shadow-rh-acc/30"
         >
           {isPending ? <span className="opacity-70">...</span> : t.cta}
