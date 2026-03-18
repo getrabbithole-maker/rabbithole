@@ -35,7 +35,10 @@ export default function Home() {
 
     const fetchCount = async () => {
       try {
-        const res = await fetch('/api/waitlist-count')
+        // Add cache busting to prevent browser caching
+        const res = await fetch(`/api/waitlist-count?_t=${Date.now()}`, {
+          cache: 'no-store'
+        })
         const data = await res.json()
         setWaitlistCount(data.count || 0)
         setIsLoading(false)

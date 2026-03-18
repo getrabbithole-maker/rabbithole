@@ -25,5 +25,18 @@ export function getSupabaseClient() {
 
 // Server instance for use in server actions/API routes
 export function getSupabaseAdmin() {
-  return createClient(getSupabaseUrl(), getSupabaseServiceKey())
+  return createClient(
+    getSupabaseUrl(),
+    getSupabaseServiceKey(),
+    {
+      db: { schema: 'public' },
+      global: {
+        fetch: fetch, // Use native fetch, not cached
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      }
+    }
+  )
 }

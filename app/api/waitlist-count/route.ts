@@ -2,48 +2,37 @@ import { NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0 // Disable Next.js caching
 
 export async function GET() {
   try {
-    // Check if environment variables are set
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('Missing Supabase environment variables')
-      return NextResponse.json({
-        count: 0,
-        error: 'Database not configured',
-        debug: {
-          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-          hasKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
-        }
-      }, { status: 200 })
-    }
-
     const supabaseAdmin = getSupabaseAdmin()
 
-    // Use count parameter - equivalent to SELECT COUNT(*) FROM waitlist
-    const { count, error } = await supabaseAdmin
-      .from('waitlist')
-      .select('*', { count: 'exact' })
+    // Use RPC - forces fresh SQL query execution
+    const { data: count, error } = await supabaseAdmin.rpc('get_waitlist_count')
 
     if (error) {
-      console.error('Error fetching waitlist count:', error)
+      console.error('RPC error:', error)
+      // Fallback to direct query
+      const { data: fallbackData } = await supabaseAdmin
+        .from('waitlist')
+        .select('id')
       return NextResponse.json({
-        count: 0,
-        error: 'Database query failed',
-        details: error.message
-      }, { status: 200 })
+        count: fallbackData?.length ?? 0
+      })
     }
 
-    const actualCount = count || 0
-    console.log('Waitlist count:', actualCount)
-
-    return NextResponse.json({ count: actualCount })
+    return NextResponse.json({
+      count: count || 0
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+      }
+    })
   } catch (error) {
-    console.error('Error in waitlist-count route:', error)
     return NextResponse.json({
       count: 0,
-      error: 'Server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 200 })
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
